@@ -80,16 +80,22 @@ export default async function SubastasPage() {
                 {list.length === 0 && (
                   <tr>
                     <td className="px-3 py-3 text-muted-foreground" colSpan={7}>
-                      Sin datos
+                      Sin datos en BOE (boe_subastas_public vacío o aún no sincronizado).
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Esta vista es gratuita y limitada. Para ver depósitos, cargas y notas registrales, accede al Plan PRO.
-          </p>
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <p>Esta vista es gratuita y limitada. Para ver depósitos, cargas y notas registrales, accede al Plan PRO.</p>
+            {list.length === 0 && (
+              <p>
+                Si ves esta vista vacía, la tabla boe_subastas_public aún no tiene datos normalizados. Ejecuta el pipeline
+                RAW→NORMALIZED o espera a la próxima corrida automática.
+              </p>
+            )}
+          </div>
         </section>
       </div>
     </div>
