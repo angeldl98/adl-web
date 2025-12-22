@@ -157,9 +157,6 @@ export function Navigation() {
               <Link href="/pharma" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Pharma
               </Link>
-              <Link href="/boe" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                BOE
-              </Link>
               <Link href="#solutions" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Soluciones
               </Link>
