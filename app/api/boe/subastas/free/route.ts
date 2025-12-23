@@ -6,15 +6,6 @@ export const runtime = "nodejs";
 
 const TABLE = "boe_subastas_public";
 
-async function getColumns() {
-  const pool = getDbPool();
-  const res = await pool.query(
-    `SELECT column_name FROM information_schema.columns WHERE table_name = $1`,
-    [TABLE]
-  );
-  return new Set(res.rows.map((r) => r.column_name as string));
-}
-
 function parseNumber(input: string | null, fallback: number, min: number, max: number) {
   const n = Number(input);
   if (Number.isFinite(n)) {
@@ -29,31 +20,34 @@ export async function GET(req: NextRequest) {
   const limit = parseNumber(searchParams.get("limit"), 20, 1, 100);
   const offset = parseNumber(searchParams.get("offset"), 0, 0, 10_000);
 
-  const cols = await getColumns();
-  const col = (name: string, fallback: string) => (cols.has(name) ? name : fallback);
-  const orderCol = cols.has("fecha_apertura") ? "fecha_apertura" : "normalized_at";
-  const descripcionExpr = cols.has("descripcion") ? "descripcion" : "identificador";
+  try {
+    const sql = `
+      SELECT
+        id,
+        identificador AS referencia,
+        tipo_subasta,
+        valor_subasta AS valor_subasta,
+        url AS enlace_boe,
+        normalized_at
+      FROM ${TABLE}
+      ORDER BY normalized_at DESC
+      LIMIT $1 OFFSET $2
+    `;
 
-  const sql = `
-    SELECT
-      id,
-      identificador AS referencia,
-      ${col("provincia", "NULL::text")} AS provincia,
-      ${col("tipo_subasta", "NULL::text")} AS tipo_subasta,
-      ${col("estado", "NULL::text")} AS estado,
-      ${col("fecha_apertura", "normalized_at")} AS fecha_apertura,
-      ${col("tipo_bien", "NULL::text")} AS tipo_bien,
-      ${col("valor_subasta", "NULL::text")} AS valor_subasta,
-      LEFT(${descripcionExpr}, 300) AS resumen
-    FROM ${TABLE}
-    ORDER BY ${orderCol} DESC
-    LIMIT $1 OFFSET $2
-  `;
-
-  const result = await pool.query(sql, [limit, offset]);
-  return NextResponse.json({
-    data: result.rows,
-    meta: { limit, offset, count: result.rowCount },
-  });
+    const result = await pool.query(sql, [limit, offset]);
+    return NextResponse.json({
+      data: result.rows,
+      meta: { limit, offset, count: result.rowCount },
+    });
+  } catch (err: any) {
+    if (err?.code === "42P01") {
+      return NextResponse.json(
+        { error: "boe_subastas_public missing", hint: "Run migration and normalization pipeline" },
+        { status: 503 }
+      );
+    }
+    console.error("free endpoint error", err);
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
+  }
 }
 
