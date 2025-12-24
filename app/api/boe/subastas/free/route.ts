@@ -24,10 +24,12 @@ export async function GET(req: NextRequest) {
     const sql = `
       SELECT
         id,
-        identificador AS referencia,
+        identificador,
         tipo_subasta,
-        valor_subasta AS valor_subasta,
-        url AS enlace_boe,
+        estado,
+        valor_subasta,
+        tasacion,
+        url,
         normalized_at
       FROM ${TABLE}
       ORDER BY normalized_at DESC
