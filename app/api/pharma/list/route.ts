@@ -1,24 +1,25 @@
 import { NextResponse } from "next/server";
 import { getDbPool } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 async function ensureTables() {
   const pool = getDbPool();
   await pool.query(`CREATE SCHEMA IF NOT EXISTS pharma_prod`);
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS pharma_prod.farmacias (
+    CREATE TABLE IF NOT EXISTS pharma_prod.medicamentos (
       raw_id INT PRIMARY KEY,
-      nombre TEXT,
-      direccion TEXT,
-      municipio TEXT,
-      provincia TEXT,
-      estado TEXT,
+      codigo_nacional TEXT,
+      nombre_medicamento TEXT,
+      laboratorio TEXT,
+      estado_aemps TEXT,
+      fecha_estado TIMESTAMPTZ,
+      estado_norm TEXT,
       checksum TEXT,
       updated_at TIMESTAMPTZ DEFAULT now()
     )
   `);
 }
-
-export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -26,8 +27,8 @@ export async function GET() {
     const pool = getDbPool();
     const res = await pool.query(
       `
-        SELECT raw_id, nombre, direccion, municipio, provincia, estado, checksum, updated_at
-        FROM pharma_prod.farmacias
+        SELECT raw_id, codigo_nacional, nombre_medicamento, laboratorio, estado_aemps, fecha_estado, estado_norm, checksum, updated_at
+        FROM pharma_prod.medicamentos
         ORDER BY updated_at DESC
       `
     );
